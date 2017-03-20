@@ -13,36 +13,60 @@ public class FordFulkerson {
 		//MY Code
 		
 		//I would like to use recursion and I need an external data structure to
-		//keep track of the visited nodes. For this reason, I will not be able to recurse
-		//on the present method. Instead, I will create a similar method after this one
-		int[] visited = new int[graph.getNbNodes()];
+		//keep track of the visited nodes. Since I have to write the code only in here,
+		// I will use recursion ont his method and pass a smaller graph as a parameter.
+		// Since we dont have access to proper set methods on graphs but we can clone a graph,
+		// I will clone the graph and set edges to 0 to have kind of a sub graph
 		
+		
+		if (source == destination){
+			Stack.add(source);
+			return Stack;	//Base case
+		}
+		
+		WGraph subGraph = new WGraph(graph);	//Since we can't keep track of visited nodes, use subgraphs
+		for(Edge e:subGraph.getEdges()){
+			if((e.nodes[0] == source || e.nodes[1] == source) && e.weight != 0){
+				subGraph.setEdge(e.nodes[0], e.nodes[1], 0);
+			}
+		}
+		
+		for(Edge e:graph.getEdges()){
+			if(e.nodes[0] == source && e.weight != 0){
+				ArrayList<Integer> path = pathDFS(e.nodes[1],destination,subGraph);
+				if(path != null){
+					Stack.add(source);
+					Stack.addAll(path);
+					return Stack;
+				}
+			}
+		}
 		
 		//My Code ^
 		
 		return Stack;
 	}
 	
-	public static void dfs(Integer source, Integer destination, WGraph graph, int[] visited){
-		ArrayList<Integer> stack = new ArrayList<Integer>();
-		//Take source node
-		//Check if its destination
-		if(source.equals(destination)){
-			//We found the path s->d, return the stack
-			Stack.add(destination);
-			return Stack;
-		}
-		
-		//Add neighbors on the stack
-		for(Edge e:graph.getEdges()){
-			if(e.nodes[0] == source){
-				Stack.add(e.nodes[1]);
-			}
-		}
-		
-		//mark as visited
-		//Goto last node on the stack
-	}
+//	public static void dfs(Integer source, Integer destination, WGraph graph, int[] visited){
+//		ArrayList<Integer> stack = new ArrayList<Integer>();
+//		//Take source node
+//		//Check if its destination
+//		if(source.equals(destination)){
+//			//We found the path s->d, return the stack
+//			Stack.add(destination);
+//			return Stack;
+//		}
+//		
+//		//Add neighbors on the stack
+//		for(Edge e:graph.getEdges()){
+//			if(e.nodes[0] == source){
+//				Stack.add(e.nodes[1]);
+//			}
+//		}
+//		
+//		//mark as visited
+//		//Goto last node on the stack
+//	}
 	
 	
 	
@@ -96,6 +120,7 @@ public class FordFulkerson {
 		 String file = args[0];
 		 File f = new File(file);
 		 WGraph g = new WGraph(file);
-		 fordfulkerson(g.getSource(),g.getDestination(),g,f.getAbsolutePath().replace(".txt",""));
+		 //fordfulkerson(g.getSource(),g.getDestination(),g,f.getAbsolutePath().replace(".txt",""));
+		 System.out.println(pathDFS(g.getSource(), g.getDestination(), g));
 	 }
 }
