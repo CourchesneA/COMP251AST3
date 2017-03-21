@@ -34,7 +34,7 @@ public class FordFulkerson {
 		for(Edge e:graph.getEdges()){
 			if(e.nodes[0] == source && e.weight != 0){
 				ArrayList<Integer> path = pathDFS(e.nodes[1],destination,subGraph);
-				if(path != null){
+				if(path.size() != 0){
 					Stack.add(source);
 					Stack.addAll(path);
 					return Stack;
@@ -47,44 +47,53 @@ public class FordFulkerson {
 		return Stack;
 	}
 	
-//	public static void dfs(Integer source, Integer destination, WGraph graph, int[] visited){
-//		ArrayList<Integer> stack = new ArrayList<Integer>();
-//		//Take source node
-//		//Check if its destination
-//		if(source.equals(destination)){
-//			//We found the path s->d, return the stack
-//			Stack.add(destination);
-//			return Stack;
-//		}
-//		
-//		//Add neighbors on the stack
-//		for(Edge e:graph.getEdges()){
-//			if(e.nodes[0] == source){
-//				Stack.add(e.nodes[1]);
-//			}
-//		}
-//		
-//		//mark as visited
-//		//Goto last node on the stack
-//	}
-	
-	
 	
 	public static void fordfulkerson(Integer source, Integer destination, WGraph graph, String filePath){
 		String answer="";
 		String myMcGillID = "260688650"; //Please initialize this variable with your McGill ID
 		int maxFlow = 0;
 		
-				/* YOUR CODE GOES HERE
-		//
-		//
-		//
-		//
-		//
-		//
-		//
-		*/
+				// YOUR CODE GOES HERE
+		//Compute max flow and graph
 		
+		//Find a path using a naive algorithm (DFS) with flow at bottleneck value
+		
+		ArrayList<Integer> path = pathDFS(source, destination, graph);
+		//Find bottleneck
+		int bottleneck = graph.getEdge(path.get(0), path.get(1)).weight;	// init weight as first weight
+		for(int i=0; i< path.size()-1; i++){
+			if(bottleneck < graph.getEdge(path.get(i), path.get(i+1)).weight){
+				bottleneck = graph.getEdge(path.get(i), path.get(i+1)).weight;
+			}
+		}
+		//Create flow graph with 0s and Bottleneck for the path
+		WGraph flow = new WGraph();
+		for(Edge e:graph.getEdges()){
+			if(path.contains(e.nodes[0]) && path.contains(e.nodes[1])){
+				flow.addEdge(new Edge(e.nodes[0],e.nodes[1],bottleneck));
+			}else{
+				flow.addEdge(new Edge(e.nodes[0],e.nodes[1],0));
+			}
+		}
+		 
+		//Compute residual graph
+		// clone graph and
+		// for each edge in DFS path
+		// add backward edge of flow value
+		// subtract flow from edge
+		WGraph residual = new WGraph();
+		for(Edge e: flow.getEdges()){
+			//add backward edge of flow value
+			residual.addEdge(new Edge(e.nodes[1], e.nodes[0], e.weight));
+		}
+		for(Edge e: graph.getEdges()){
+			//add a edge of graph-flow
+			residual.addEdge(new Edge(e.nodes[0], e.nodes[1], e.weight - residual.getEdge(e.nodes[0], e.nodes[1]).weight));
+		}
+				
+		//TODO Augment graph
+		
+		//
 		
 		answer += maxFlow + "\n" + graph.toString();	
 		writeAnswer(filePath+myMcGillID+".txt",answer);
