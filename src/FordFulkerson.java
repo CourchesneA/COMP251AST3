@@ -61,18 +61,18 @@ public class FordFulkerson {
 		ArrayList<Integer> path = pathDFS(source, destination, graph);
 		//Find bottleneck
 		int bottleneck = graph.getEdge(path.get(0), path.get(1)).weight;	// init weight as first weight
-		for(int i=0; i< path.size()-1; i++){
-			if(bottleneck < graph.getEdge(path.get(i), path.get(i+1)).weight){
+		for(int i=0; i< path.size()-1; i++){			//Find bottleneck
+			if(bottleneck > graph.getEdge(path.get(i), path.get(i+1)).weight){		//TODO smallest residual capacity ?
 				bottleneck = graph.getEdge(path.get(i), path.get(i+1)).weight;
 			}
 		}
 		//Create flow graph with 0s and Bottleneck for the path
-		WGraph flow = new WGraph();
-		for(Edge e:graph.getEdges()){
-			if(path.contains(e.nodes[0]) && path.contains(e.nodes[1])){
-				flow.addEdge(new Edge(e.nodes[0],e.nodes[1],bottleneck));
+		WGraph flow = new WGraph(graph);
+		for(Edge e: graph.getEdges()){
+			if(path.indexOf(e.nodes[1]) == path.indexOf(e.nodes[0])+1){ //edge exists on path
+				flow.setEdge(e.nodes[0], e.nodes[1], bottleneck);
 			}else{
-				flow.addEdge(new Edge(e.nodes[0],e.nodes[1],0));
+				flow.setEdge(e.nodes[0], e.nodes[1], 0);
 			}
 		}
 		 
@@ -93,7 +93,53 @@ public class FordFulkerson {
 				
 		//TODO Augment graph
 		
-		//
+		while((path = pathDFS(source, destination, residual)).size() != 0){	//while there is a s-t path in residual
+		//flow.augment(P)
+			//find bottleneck
+			bottleneck = residual.getEdge(path.get(0), path.get(1)).weight;	// init weight as first weight
+			for(int i=0; i< path.size()-1; i++){			//Find bottleneck
+				if(bottleneck > residual.getEdge(path.get(i), path.get(i+1)).weight){		//TODO smallest residual capacity ?
+					bottleneck = residual.getEdge(path.get(i), path.get(i+1)).weight;
+				}
+			}
+			
+			//Augment
+			for(int i=0; i< path.size()-1; i++){			//Foreach edge on the path
+				int node1 = path.get(i);
+				int node2 = path.get(i+1);
+				
+				//Augment the flow
+				//Add bottleneck to each edge on the path
+				Edge fe = flow.getEdge(node1, node2);
+				Edge be = flow.getEdge(node2, node1);
+				
+				if(fe!= null && (be== null || be.weight == 0)){	//forward edge
+					flow.setEdge(node1, node2, flow.getEdge(node1, node2).weight + bottleneck);
+				}else{
+					//Backward edge
+					flow.setEdge(node1, node2, flow.getEdge(node1, node2).weight - bottleneck);
+				}			
+			}	
+			
+		//Update residual based on new flow
+			for(Edge e: flow.getEdges()){
+				//add backward edge of flow value
+				residual.addEdge(new Edge(e.nodes[1], e.nodes[0], e.weight));
+			}
+			for(Edge e: graph.getEdges()){
+				//add a edge of graph-flow
+				residual.addEdge(new Edge(e.nodes[0], e.nodes[1], e.weight - residual.getEdge(e.nodes[0], e.nodes[1]).weight));
+			}
+		}
+		graph = flow;
+		//Compute the max flow
+		for(Edge e:graph.getEdges()){
+			if(e.nodes[1] == destination){
+				maxFlow+=e.weight;
+			}
+		}
+		
+		//******************
 		
 		answer += maxFlow + "\n" + graph.toString();	
 		writeAnswer(filePath+myMcGillID+".txt",answer);
@@ -129,7 +175,7 @@ public class FordFulkerson {
 		 String file = args[0];
 		 File f = new File(file);
 		 WGraph g = new WGraph(file);
-		 //fordfulkerson(g.getSource(),g.getDestination(),g,f.getAbsolutePath().replace(".txt",""));
-		 System.out.println(pathDFS(g.getSource(), g.getDestination(), g));
+		 fordfulkerson(g.getSource(),g.getDestination(),g,f.getAbsolutePath().replace(".txt",""));
+		 //System.out.println(pathDFS(g.getSource(), g.getDestination(), g));
 	 }
 }
