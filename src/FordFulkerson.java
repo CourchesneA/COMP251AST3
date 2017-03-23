@@ -53,12 +53,19 @@ public class FordFulkerson {
 		String myMcGillID = "260688650"; //Please initialize this variable with your McGill ID
 		int maxFlow = 0;
 		
-				// YOUR CODE GOES HERE
+		//MY CODE
 		//Compute max flow and graph
 		
 		//Find a path using a naive algorithm (DFS) with flow at bottleneck value
 		
 		ArrayList<Integer> path = pathDFS(source, destination, graph);
+		if(path.size()==0){
+			//like a break or return
+			answer += 0 + "\n" + "<Not printing a graph since no path to destination exists>";	
+			writeAnswer(filePath+myMcGillID+".txt",answer);
+			System.out.println(answer);
+			return;
+		}
 		//Find bottleneck
 		int bottleneck = graph.getEdge(path.get(0), path.get(1)).weight;	// init weight as first weight
 		for(int i=0; i< path.size()-1; i++){			//Find bottleneck
@@ -81,7 +88,7 @@ public class FordFulkerson {
 		// for each edge in DFS path
 		// add backward edge of flow value
 		// subtract flow from edge
-		WGraph residual = new WGraph();	//No source of destination
+		WGraph residual = new WGraph();	//No source or destination
 		for(Edge e: flow.getEdges()){
 			//add backward edge of flow value
 			if(e.weight != 0){
@@ -93,7 +100,6 @@ public class FordFulkerson {
 			residual.addEdge(new Edge(e.nodes[0], e.nodes[1], e.weight - flow.getEdge(e.nodes[0], e.nodes[1]).weight));
 		}
 				
-		//TODO Augment graph
 		
 		while((path = pathDFS(source, destination, residual)).size() != 0){	//while there is a s-t path in residual
 		//flow.augment(P)
