@@ -81,14 +81,16 @@ public class FordFulkerson {
 		// for each edge in DFS path
 		// add backward edge of flow value
 		// subtract flow from edge
-		WGraph residual = new WGraph();
+		WGraph residual = new WGraph();	//No source of destination
 		for(Edge e: flow.getEdges()){
 			//add backward edge of flow value
-			residual.addEdge(new Edge(e.nodes[1], e.nodes[0], e.weight));
+			if(e.weight != 0){
+				residual.addEdge(new Edge(e.nodes[1], e.nodes[0], e.weight));
+			}
 		}
 		for(Edge e: graph.getEdges()){
 			//add a edge of graph-flow
-			residual.addEdge(new Edge(e.nodes[0], e.nodes[1], e.weight - residual.getEdge(e.nodes[0], e.nodes[1]).weight));
+			residual.addEdge(new Edge(e.nodes[0], e.nodes[1], e.weight - flow.getEdge(e.nodes[0], e.nodes[1]).weight));
 		}
 				
 		//TODO Augment graph
@@ -115,22 +117,41 @@ public class FordFulkerson {
 				
 				if(fe!= null && (be== null || be.weight == 0)){	//forward edge
 					flow.setEdge(node1, node2, flow.getEdge(node1, node2).weight + bottleneck);
-				}else{
+				}else if(be != null){
 					//Backward edge
-					flow.setEdge(node1, node2, flow.getEdge(node1, node2).weight - bottleneck);
-				}			
+					//If the total weight end up negative flip the edge
+					int endWeight = flow.getEdge(node2, node1).weight - bottleneck;
+					if(endWeight >= 1){
+						flow.setEdge(node2, node1, endWeight);
+					}else{
+						flow.setEdge(node2, node1, 0);
+						try{
+							flow.addEdge(new Edge(node2,node1,Math.abs(endWeight)));
+						}catch(Exception e){
+							flow.setEdge(node2, node1, flow.getEdge(node2, node1).weight+endWeight);
+						}
+					}
+				}else{ //No edge at all
+					flow.addEdge(new Edge(node1,node2,bottleneck));
+					
+				}
 			}	
 			
 		//Update residual based on new flow
+
+			residual = new WGraph();	//No source of destination
 			for(Edge e: flow.getEdges()){
 				//add backward edge of flow value
-				residual.addEdge(new Edge(e.nodes[1], e.nodes[0], e.weight));
+				if(e.weight != 0){
+					residual.addEdge(new Edge(e.nodes[1], e.nodes[0], e.weight));
+				}
 			}
 			for(Edge e: graph.getEdges()){
 				//add a edge of graph-flow
-				residual.addEdge(new Edge(e.nodes[0], e.nodes[1], e.weight - residual.getEdge(e.nodes[0], e.nodes[1]).weight));
+				residual.addEdge(new Edge(e.nodes[0], e.nodes[1], e.weight - flow.getEdge(e.nodes[0], e.nodes[1]).weight));
 			}
 		}
+			
 		graph = flow;
 		//Compute the max flow
 		for(Edge e:graph.getEdges()){
